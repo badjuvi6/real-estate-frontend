@@ -15,9 +15,9 @@ dotenv.config();
 // This configures the Cloudinary SDK with your account credentials.
 // It uses environment variables (loaded by dotenv) to keep sensitive info secure.
 cloudinary.config({
-    cloud_name: process.env.dztkg2o3f,
-    api_key: process.env.382862493954335,
-    api_secret: process.env.sYJXs7iyyLhOtRd6VdnBux06V-4
+   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,      // <-- FIX IS HERE! Must be the environment variable name
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 // --- End Cloudinary Configuration ---
 
