@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- API Base URL ---
     // IMPORTANT: Make sure this matches the port your backend Express server is running on.
     // Default is 3000. If you deploy, this will change to your deployed backend URL.
-    const API_BASE_URL = 'http://localhost:3000/api/properties';
+    const API_BASE_URL = 'https://real-estate-backend-h76n.onrender.com';
 
     let allProperties = []; // To store all fetched properties for client-side filtering
 
