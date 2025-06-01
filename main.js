@@ -4,8 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const homePage = document.getElementById('home-page');
     const listingsPage = document.getElementById('listings-page');
     const propertyDetailPage = document.getElementById('property-detail-page');
+    const contactPage = document.getElementById('contact-page'); // New: Contact page reference
     const homeLink = document.getElementById('home-link');
     const listingsLink = document.getElementById('listings-link');
+    const contactLink = document.getElementById('contact-link'); // New: Contact link reference
     const propertyListings = document.getElementById('property-listings');
     const addPropertyBtn = document.getElementById('add-property-btn');
     const propertyModal = document.getElementById('property-modal');
@@ -26,16 +28,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyFiltersButton = document.getElementById('apply-filters');
     const clearFiltersButton = document.getElementById('clear-filters');
 
+    // New: Contact Form elements
+    const contactForm = document.getElementById('contact-form');
+    const contactStatus = document.getElementById('contact-status');
+
     // --- API Base URL ---
-    // IMPORTANT: Make sure this matches the port your backend Express server is running on.
-    // Default is 3000. If you deploy, this will change to your deployed backend URL.
     const API_BASE_URL = 'https://real-estate-backend-h76n.onrender.com';
 
     let allProperties = []; // To store all fetched properties for client-side filtering
 
     // --- Utility Function: Show/Hide Pages ---
     const showPage = (pageToShow) => {
-        const pages = [homePage, listingsPage, propertyDetailPage];
+        // Updated: Include contactPage in the pages array
+        const pages = [homePage, listingsPage, propertyDetailPage, contactPage]; 
         pages.forEach(page => page.classList.add('hidden')); // Hide all pages
         pageToShow.classList.remove('hidden'); // Show the target page
         // Clear any previous detail content when navigating away from detail page
@@ -55,6 +60,19 @@ document.addEventListener('DOMContentLoaded', () => {
         showPage(listingsPage);
         fetchAndRenderProperties(); // Refresh listings every time we go to the listings page
     });
+
+    // New: Contact link event listener
+    if (contactLink) {
+        contactLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPage(contactPage);
+            // Optionally clear contact form status when navigating to it
+            if (contactStatus) {
+                contactStatus.textContent = '';
+                contactForm.reset();
+            }
+        });
+    }
 
     // --- Property Card Rendering Function ---
     const renderProperties = (propertiesToRender) => {
@@ -104,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchAndRenderProperties = async () => {
         propertyListings.innerHTML = '<p style="text-align: center;">Loading properties...</p>'; // Show loading message
         try {
-            const response = await fetch(API_BASE_URL);
+            const response = await fetch(`${API_BASE_URL}/api/properties`); // Ensure /api/properties is appended here
             if (!response.ok) {
                 // If response is not 2xx, throw an error with status and text
                 throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
@@ -148,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProperties(filtered); // Re-render with filtered results
     };
 
+    searchInput.addEventListener('input', applySearchAndFilters); // Live search as user types
     searchButton.addEventListener('click', applySearchAndFilters);
     applyFiltersButton.addEventListener('click', applySearchAndFilters);
     clearFiltersButton.addEventListener('click', () => {
@@ -163,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewPropertyDetails = async (id) => {
         propertyDetailPage.innerHTML = '<p style="text-align: center;">Loading property details...</p>'; // Show loading message
         try {
-            const response = await fetch(`${API_BASE_URL}/${id}`);
+            const response = await fetch(`${API_BASE_URL}/api/properties/${id}`); // Ensure /api/properties is part of the URL
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -199,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const openPropertyModalForEdit = async (id) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/${id}`);
+            const response = await fetch(`${API_BASE_URL}/api/properties/${id}`); // Ensure /api/properties is part of the URL
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -280,11 +299,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let response;
             let method = 'POST'; // Default to POST for new property
-            let url = API_BASE_URL; // Default URL for new property
+            let url = `${API_BASE_URL}/api/properties`; // Default URL for new property (corrected path)
 
             if (propertyId) {
                 method = 'PUT'; // Change method to PUT for updating existing property
-                url = `${API_BASE_URL}/${propertyId}`; // Append ID for specific property update
+                url = `${API_BASE_URL}/api/properties/${propertyId}`; // Append ID for specific property update (corrected path)
             }
 
             // For FormData, you DO NOT set 'Content-Type': 'application/json' header.
@@ -316,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return; // User cancelled the deletion
         }
         try {
-            const response = await fetch(`${API_BASE_URL}/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/properties/${id}`, { // Ensure /api/properties is part of the URL
                 method: 'DELETE', // Use DELETE HTTP method
             });
 
