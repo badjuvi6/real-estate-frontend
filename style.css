@@ -341,11 +341,14 @@ header nav a:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.6); /* Slightly darker overlay for better contrast */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    /* --- NEW/MODIFIED FOR SCROLLING --- */
+    overflow-y: auto; /* Allows the modal itself to scroll if the viewport is too small */
+    -webkit-overflow-scrolling: touch; /* For smoother scrolling on iOS */
 }
 
 .modal.hidden {
@@ -359,6 +362,9 @@ header nav a:hover {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
     width: 90%;
     max-width: 550px;
+    /* --- NEW/MODIFIED FOR SCROLLING --- */
+    max-height: 90vh; /* Limit content height to 90% of viewport height */
+    overflow-y: auto; /* Allows content *inside* the modal to scroll */
     animation: fadeInScale 0.3s ease-out forwards;
 }
 
