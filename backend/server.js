@@ -4,17 +4,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const cors = require('cors');
+const cors = require('cors'); // Ensure cors is imported
 const cloudinary = require('cloudinary').v2; // Import Cloudinary v2 SDK
 
 // Load environment variables from the .env file into process.env.
 // This MUST be called *before* accessing process.env variables for configurations.
 dotenv.config();
-
-// ... (other imports like express, mongoose, dotenv, cors) ...
-const cloudinary = require('cloudinary').v2;
-
-dotenv.config(); // This line loads your .env file variables into process.env
 
 // --- Cloudinary Configuration ---
 // This block correctly accesses the variables from process.env
@@ -34,14 +29,16 @@ const PORT = process.env.PORT || 3000;
 
 // --- Middleware Setup ---
 // 1. CORS Middleware:
-//    Enables Cross-Origin Resource Sharing. This allows your frontend (e.g., on localhost:5500)
-//    to make requests to your backend (e.g., on localhost:3000).
-//    For production, it's safer to restrict `origin` to your specific frontend domain.
-app.use(cors());
+//    Enables Cross-Origin Resource Sharing. This allows your frontend (e.g., on localhost:5500)
+//    to make requests to your backend (e.g., on localhost:3000).
+//    For production, it's safer to restrict `origin` to your specific frontend domain.
+app.use(cors({
+  origin: '*' // <--- THIS LINE IS ADDED/MODIFIED TO ALLOW ALL ORIGINS FOR TESTING
+}));
 
 // 2. Express JSON Body Parser Middleware:
-//    Parses incoming request bodies with JSON payloads (e.g., for non-file data like title, description).
-//    Multer will handle `multipart/form-data` for file uploads, but this is still needed for other JSON requests.
+//    Parses incoming request bodies with JSON payloads (e.g., for non-file data like title, description).
+//    Multer will handle `multipart/form-data` for file uploads, but this is still needed for other JSON requests.
 app.use(express.json());
 
 // --- MongoDB Database Connection ---
