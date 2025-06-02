@@ -250,11 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Event listeners for filters on the Listings Page
-    if (filterLocationInput) filterLocationInput.addEventListener('input', applySearchAndFilters);
-    if (filterMinPriceInput) filterMinPriceInput.addEventListener('input', applySearchAndFilters);
-    if (filterMaxPriceInput) filterMaxPriceInput.addEventListener('input', applySearchAndFilters);
-
     if (applyFiltersButton) applyFiltersButton.addEventListener('click', applySearchAndFilters);
     if (clearFiltersButton) {
         clearFiltersButton.addEventListener('click', () => {
