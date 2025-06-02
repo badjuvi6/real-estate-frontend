@@ -4,12 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const homePage = document.getElementById('home-page');
     const listingsPage = document.getElementById('listings-page');
     const propertyDetailPage = document.getElementById('property-detail-page');
-    const contactPage = document.getElementById('contact-page'); // Existing: Contact page reference
-    const faqPage = document.getElementById('faq-page'); // New: FAQ page reference
+    const detailContent = document.getElementById('detail-content'); // Crucial: Get the specific div inside property-detail-page
+    const contactPage = document.getElementById('contact-page');
+    const faqPage = document.getElementById('faq-page');
     const homeLink = document.getElementById('home-link');
     const listingsLink = document.getElementById('listings-link');
-    const contactLink = document.getElementById('contact-link'); // Existing: Contact link reference
-    const faqLink = document.getElementById('faq-link'); // New: FAQ link reference
+    const contactLink = document.getElementById('contact-link');
+    const faqLink = document.getElementById('faq-link');
     const propertyListings = document.getElementById('property-listings');
     const addPropertyBtn = document.getElementById('add-property-btn');
     const propertyModal = document.getElementById('property-modal');
@@ -30,24 +31,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyFiltersButton = document.getElementById('apply-filters');
     const clearFiltersButton = document.getElementById('clear-filters');
 
-    // Contact Form elements (assuming these are already in your main.js)
+    // Contact Form elements
     const contactForm = document.getElementById('contact-form');
     const contactStatus = document.getElementById('contact-status');
 
     // --- API Base URL ---
+    // IMPORTANT: Make sure this is your Render backend's base URL.
     const API_BASE_URL = 'https://real-estate-backend-h76n.onrender.com';
 
     let allProperties = []; // To store all fetched properties for client-side filtering
 
     // --- Utility Function: Show/Hide Pages ---
     const showPage = (pageToShow) => {
-        // Updated: Include faqPage in the pages array
+        // All known page sections
         const pages = [homePage, listingsPage, propertyDetailPage, contactPage, faqPage];
-        pages.forEach(page => page.classList.add('hidden')); // Hide all pages
-        pageToShow.classList.remove('hidden'); // Show the target page
+        
+        // Ensure all page references are valid before trying to use classList
+        // If any of these are null, it means the corresponding HTML element is missing.
+        // This log helps debug if the issue persists.
+        pages.forEach(page => {
+            if (page) {
+                page.classList.add('hidden'); // Hide all pages
+            } else {
+                console.error(`Error: Page element is null. Check HTML ID for one of these:`, {
+                    homePage, listingsPage, propertyDetailPage, contactPage, faqPage
+                });
+            }
+        });
+        
+        // Show the target page, only if it's not null
+        if (pageToShow) {
+            pageToShow.classList.remove('hidden'); 
+        } else {
+             console.error(`Error: Target page to show is null. Check showPage call:`, pageToShow);
+        }
+
         // Clear any previous detail content when navigating away from detail page
         if (pageToShow !== propertyDetailPage) {
-            detailContent.innerHTML = '<p>Loading property details...</p>'; // Clear detail content if not on detail page
+            // Ensure detailContent is not null before trying to set innerHTML
+            if (detailContent) {
+                detailContent.innerHTML = '<p>Loading property details...</p>';
+            }
         }
     };
 
@@ -63,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchAndRenderProperties(); // Refresh listings every time we go to the listings page
     });
 
-    // Existing: Contact link event listener
     if (contactLink) {
         contactLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -75,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // New: FAQ link event listener
     if (faqLink) {
         faqLink.addEventListener('click', (e) => {
             e.preventDefault();
@@ -85,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Property Card Rendering Function ---
     const renderProperties = (propertiesToRender) => {
-        propertyListings.innerHTML = ''; // Clear existing listings
+        propertyListings.innerHTML = '';
         if (propertiesToRender.length === 0) {
             propertyListings.innerHTML = '<p class="no-properties-message">No properties found matching your criteria.</p>';
             return;
@@ -128,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchAndRenderProperties = async () => {
         propertyListings.innerHTML = '<p style="text-align: center;">Loading properties...</p>';
         try {
-            const response = await fetch(`${API_BASE_URL}/api/properties`);
+            const response = await fetch(`${API_BASE_URL}/api/properties`); // Corrected path
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
             }
@@ -184,10 +206,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Property Detail View ---
     const viewPropertyDetails = async (id) => {
+        // Clear content before loading new details
         detailContent.innerHTML = '<p style="text-align: center;">Loading property details...</p>';
-        showPage(propertyDetailPage);
+        showPage(propertyDetailPage); // Show the detail page container immediately
 
         try {
+            // Corrected: Ensure API path includes /api/properties
             const response = await fetch(`${API_BASE_URL}/api/properties/${id}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -208,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
+            // Add event listener for the "Back to Listings" button on the detail page
             const detailBackButton = document.getElementById('detail-back-button');
             if (detailBackButton) {
                 detailBackButton.addEventListener('click', () => {
@@ -216,6 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
+            // Add event listener for the contact button
             const contactAgentBtn = document.getElementById('contact-agent-btn');
             if (contactAgentBtn) {
                 contactAgentBtn.addEventListener('click', () => {
@@ -244,6 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const openPropertyModalForEdit = async (id) => {
         try {
+            // Corrected: Ensure API path includes /api/properties
             const response = await fetch(`${API_BASE_URL}/api/properties/${id}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -316,10 +343,12 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let response;
             let method = 'POST';
+            // Corrected: URL for POST (add) should be /api/properties
             let url = `${API_BASE_URL}/api/properties`;
 
             if (propertyId) {
                 method = 'PUT';
+                // Corrected: URL for PUT (edit) should be /api/properties/:id
                 url = `${API_BASE_URL}/api/properties/${propertyId}`;
             }
 
@@ -348,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
+            // Corrected: URL for DELETE should be /api/properties/:id
             const response = await fetch(`${API_BASE_URL}/api/properties/${id}`, {
                 method: 'DELETE',
             });
