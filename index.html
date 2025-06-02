@@ -1,323 +1,169 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Dynamic Real Estate Listings</title>
-
-    <link rel="stylesheet" href="style.css">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Real Estate Listings</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-
 <body>
-
-    <header>
-
-        <h1>Your Dream Home Awaits!</h1>
-
-        <nav>
-
-            <a href="#" id="home-link">Home</a>
-
-            <a href="#" id="listings-link">All Listings</a>
-
-            <a href="#" id="contact-link">Contact</a>
-
-            <a href="#" id="faq-link">FAQ</a>
-
-        </nav>
-
-    </header>
-
-
-
-    <main id="app-root">
-
-        <section id="home-page" class="page active">
-
-            <h2>Find Your Dream Property</h2>
-
-            <div class="search-bar">
-
-                <input type="text" id="search-input" placeholder="Search by title, location, or description...">
-
-                <button id="search-button">Search</button>
-
-            </div>
-
-            <div class="hero-section">
-
-                <img src="https://images.pexels.com/photos/1642125/pexels-photo-1642125.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Beautiful Home">
-
-                <p>Discover stunning properties across the globe.</p>
-
-            </div>
-
-        </section>
-
-
-
-        <section id="listings-page" class="page hidden">
-
-            <h2>Available Properties</h2>
-
-            <div class="filters">
-
-                <input type="text" id="filter-location" placeholder="Filter by city/location...">
-
-                <input type="number" id="filter-min-price" placeholder="Min Price">
-
-                <input type="number" id="filter-max-price" placeholder="Max Price">
-
-                <button id="apply-filters">Apply Filters</button>
-
-                <button id="clear-filters">Clear Filters</button>
-
-            </div>
-
-            <div id="property-listings" class="grid-container">
-
-                <p>Loading properties...</p>
-
-            </div>
-
-            <button id="add-property-btn" class="action-button">Add New Property</button>
-
-        </section>
-
-
-
-        <section id="property-detail-page" class="page hidden">
-
-            <div id="detail-content">
-
-                <p>Loading property details...</p>
-
-            </div>
-
-        </section>
-
-
-
-        <section id="contact-page" class="page hidden">
-
-            <h2>Contact An Agent</h2>
-
-            <form id="contact-form">
-
-                <label for="contact-name">Your Name:</label>
-
-                <input type="text" id="contact-name" name="name" required><br>
-
-
-
-                <label for="contact-email">Your Email:</label>
-
-                <input type="email" id="contact-email" name="email" required><br>
-
-
-
-                <label for="contact-subject">Subject:</label>
-
-                <input type="text" id="contact-subject" name="subject"><br>
-
-
-
-                <label for="contact-message">Message:</label>
-
-                <textarea id="contact-message" name="message" rows="5" required></textarea><br>
-
-
-
-                <button type="submit">Send Message</button>
-
-            </form>
-
-            <p id="contact-status"></p>
-
-        </section>
-
-
-
-        <section id="faq-page" class="page hidden">
-
-            <h2>Frequently Asked Questions</h2>
-
-
-
-            <div class="faq-item">
-
-                <h3>Q: How often are new properties added to the website?</h3>
-
-                <p>A: We update our listings daily, with new properties being added as soon as they become available. Check back frequently or sign up for alerts!</p>
-
-            </div>
-
-
-
-            <div class="faq-item">
-
-                <h3>Q: Can I filter properties by specific criteria?</h3>
-
-                <p>A: Yes, you can filter properties by location, minimum price, and maximum price on the "All Listings" page. Use the search bar to find properties by title or description.</p>
-
-            </div>
-
-
-
-            <div class="faq-item">
-
-                <h3>Q: How do I contact an agent about a property?</h3>
-
-                <p>A: You can use the "Contact" form available in the navigation bar. You can also find a "Contact Agent" button on each property's detail page, which will pre-fill the contact form with details about that specific property.</p>
-
-            </div>
-
-
-
-            <div class="faq-item">
-
-                <h3>Q: What types of properties do you list?</h3>
-
-                <p>A: We list a wide range of properties including residential homes, apartments, penthouses, and sometimes commercial spaces. Our focus is on providing diverse options for our clients.</p>
-
-            </div>
-
-
-
-            <div class="faq-item">
-
-                <h3>Q: Is this service available in Ghana?</h3>
-
-                <p>A: Yes, we primarily focus on properties within Ghana, with listings across major cities and developing areas. We also feature select international luxury properties.</p>
-
-            </div>
-
-        </section>
-
-
-
-        <div id="property-modal" class="modal hidden">
-
-            <div class="modal-content">
-
-                <h3>Add/Edit Property</h3>
-
-                <form id="property-form" enctype="multipart/form-data"> <input type="hidden" id="property-id">
-
-                    
-
-                    <label for="title">Title:</label>
-
-                    <input type="text" id="title" required><br>
-
-                    
-
-                    <label for="description">Description:</label>
-
-                    <textarea id="description" required></textarea><br>
-
-                    
-
-                    <label for="price">Price ($):</label>
-
-                    <input type="number" id="price" required min="0"><br>
-
-                    
-
-                    <label for="location">Location (City, Country):</label>
-
-                    <input type="text" id="location" required><br>
-
-                    
-
-                    <label for="imageFile">Upload Image:</label>
-
-                    <input type="file" id="imageFile" accept="image/*"><br> 
-
-                    
-
-                    <img id="imagePreview" src="" alt="Image Preview" class="image-preview hidden"> 
-
-
-
-                    <div class="modal-buttons">
-
-                        <button type="submit" class="submit-button">Save Property</button>
-
-                        <button type="button" id="cancel-modal" class="cancel-button">Cancel</button>
-
-                    </div>
-
-                </form>
-
-            </div>
-
-        </div>
-
-    </main>
-
-
-
-  <footer>
-
-        <p>&copy; 2025 Real Estate Listings Platform. All rights reserved.</p>
-
-        <div class="contact-info">
-
-            <p>Reach Out To Us:</p>
-
-            <div class="contact-details-horizontal"> <p><i class="fas fa-phone-alt"></i> Phone: <a href="tel:+1 747 444 5368">+1 747 444 5368</a></p>
-
-                <p><i class="fas fa-envelope"></i> Email: <a href="mailto:winfredmanu3@gmail.com">winfredmanu3@gmail.com</a></p>
-
-            </div>
-
-            <div class="social-links">
-
-                <a href="https://www.facebook.com/DebraF.Forsythe" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-
-                <a href="https://www.instagram.com/bad.juvi66" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-
-                </div>
-
-        </div>
-
-    </footer>
-
-
-
-    <script type="text/javascript">
-
-    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
-
-    (function(){
-
-    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
-
-    s1.async=true;
-
-    s1.src='https://embed.tawk.to/683cafe28b6539190b345bc4/1ismgu3h7';
-
-    s1.charset='UTF-8';
-
-    s1.setAttribute('crossorigin','*');
-
-    s0.parentNode.insertBefore(s1,s0);
-
-    })();
-
-    </script>
-
-    <script src="main.js"></script>
-
+    <header>
+        <h1>Your Dream Home Awaits!</h1>
+        <nav>
+            <a href="#" id="home-link">Home</a>
+            <a href="#" id="listings-link">All Listings</a>
+            <a href="#" id="contact-link">Contact</a>
+            <a href="#" id="faq-link">FAQ</a>
+        </nav>
+    </header>
+
+    <main id="app-root">
+        <section id="home-page" class="page active">
+            <h2>Find Your Dream Property</h2>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search by title, location, or description...">
+                <button id="search-button">Search</button>
+            </div>
+            <div class="hero-section">
+                <img src="https://images.pexels.com/photos/1642125/pexels-photo-1642125.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Beautiful Home">
+                <p>Discover stunning properties across the globe.</p>
+            </div>
+
+            <h3>Featured Properties</h3>
+            <div id="home-page-listings" class="grid-container">
+                <p>Loading properties...</p> </div>
+        </section>
+
+        <section id="listings-page" class="page hidden">
+            <h2>Available Properties</h2>
+            <div class="filters">
+                <input type="text" id="filter-location" placeholder="Filter by city/location...">
+                <input type="number" id="filter-min-price" placeholder="Min Price">
+                <input type="number" id="filter-max-price" placeholder="Max Price">
+                <button id="apply-filters">Apply Filters</button>
+                <button id="clear-filters">Clear Filters</button>
+            </div>
+            <div id="property-listings" class="grid-container">
+                <p>Loading properties...</p>
+            </div>
+            <button id="add-property-btn" class="action-button">Add New Property</button>
+        </section>
+
+        <section id="property-detail-page" class="page hidden">
+            <div id="detail-content">
+                <p>Loading property details...</p>
+            </div>
+        </section>
+
+        <section id="contact-page" class="page hidden">
+            <h2>Contact An Agent</h2>
+            <form id="contact-form">
+                <label for="contact-name">Your Name:</label>
+                <input type="text" id="contact-name" name="name" required><br>
+
+                <label for="contact-email">Your Email:</label>
+                <input type="email" id="contact-email" name="email" required><br>
+
+                <label for="contact-subject">Subject:</label>
+                <input type="text" id="contact-subject" name="subject"><br>
+
+                <label for="contact-message">Message:</label>
+                <textarea id="contact-message" name="message" rows="5" required></textarea><br>
+
+                <button type="submit">Send Message</button>
+            </form>
+            <p id="contact-status"></p>
+        </section>
+
+        <section id="faq-page" class="page hidden">
+            <h2>Frequently Asked Questions</h2>
+
+            <div class="faq-item">
+                <h3>Q: How often are new properties added to the website?</h3>
+                <p>A: We update our listings daily, with new properties being added as soon as they become available. Check back frequently or sign up for alerts!</p>
+            </div>
+
+            <div class="faq-item">
+                <h3>Q: Can I filter properties by specific criteria?</h3>
+                <p>A: Yes, you can filter properties by location, minimum price, and maximum price on the "All Listings" page. Use the search bar to find properties by title or description.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3>Q: How do I contact an agent about a property?</h3>
+                <p>A: You can use the "Contact" form available in the navigation bar. You can also find a "Contact Agent" button on each property's detail page, which will pre-fill the contact form with details about that specific property.</p>
+            (edited)
+            </div>
+
+            <div class="faq-item">
+                <h3>Q: What types of properties do you list?</h3>
+                <p>A: We list a wide range of properties including residential homes, apartments, penthouses, and sometimes commercial spaces. Our focus is on providing diverse options for our clients.</p>
+            </div>
+
+            <div class="faq-item">
+                <h3>Q: Is this service available in Ghana?</h3>
+                <p>A: Yes, we primarily focus on properties within Ghana, with listings across major cities and developing areas. We also feature select international luxury properties.</p>
+            </div>
+        </section>
+
+        <div id="property-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Add/Edit Property</h3>
+                <form id="property-form" enctype="multipart/form-data"> 
+                    <input type="hidden" id="property-id">
+                    
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" required><br>
+                    
+                    <label for="description">Description:</label>
+                    <textarea id="description" required></textarea><br>
+                    
+                    <label for="price">Price ($):</label>
+                    <input type="number" id="price" required min="0"><br>
+                    
+                    <label for="location">Location (City, Country):</label>
+                    <input type="text" id="location" required><br>
+                    
+                    <label for="imageFile">Upload Image:</label>
+                    <input type="file" id="imageFile" accept="image/*"><br> 
+                    
+                    <img id="imagePreview" src="" alt="Image Preview" class="image-preview hidden"> 
+
+                    <div class="modal-buttons">
+                        <button type="submit" class="submit-button">Save Property</button>
+                        <button type="button" id="cancel-modal" class="cancel-button">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Real Estate Listings Platform. All rights reserved.</p>
+        <div class="contact-info">
+            <p>Reach Out To Us:</p>
+            <div class="contact-details-horizontal"> 
+                <p><i class="fas fa-phone-alt"></i> Phone: <a href="tel:+1 747 444 5368">+1 747 444 5368</a></p>
+                <p><i class="fas fa-envelope"></i> Email: <a href="mailto:winfredmanu3@gmail.com">winfredmanu3@gmail.com</a></p>
+            </div>
+            <div class="social-links">
+                <a href="https://www.facebook.com/DebraF.Forsythe" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.instagram.com/bad.juvi66" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script type="text/javascript">
+        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        (function(){
+        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+        s1.async=true;
+        s1.src='https://embed.tawk.to/683cafe28b6539190b345bc4/1ismgu3h7';
+        s1.charset='UTF-8';
+        s1.setAttribute('crossorigin','*');
+        s0.parentNode.insertBefore(s1,s0);
+        })();
+    </script>
+    <script src="main.js"></script>
 </body>
-
 </html>
