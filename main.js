@@ -13,18 +13,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactLink = document.getElementById('contact-link');
     const faqLink = document.getElementById('faq-link');
 
+    // NEW: Reference for home page listings
+    const homePageListings = document.getElementById('home-page-listings'); 
+    // Existing: Reference for all listings page listings
     const propertyListings = document.getElementById('property-listings');
+
     const addPropertyBtn = document.getElementById('add-property-btn');
     const propertyModal = document.getElementById('property-modal');
     const propertyForm = document.getElementById('property-form');
     const cancelModalBtn = document.getElementById('cancel-modal');
     const propertyIdInput = document.getElementById('property-id');
     const titleInput = document.getElementById('title');
-    const descriptionInput = document = document.getElementById('description');
+    const descriptionInput = document.getElementById('description'); // Corrected typo here, was document = document
     const priceInput = document.getElementById('price');
     const locationInput = document.getElementById('location');
     const imageFileInput = document.getElementById('imageFile');
     const imagePreview = document.getElementById('imagePreview');
+
+    // These search/filter inputs are global as they apply to `allProperties`
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     const filterLocationInput = document.getElementById('filter-location');
@@ -44,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Utility Function: Show/Hide Pages ---
     const showPage = (pageToShow) => {
-        // All known page sections
         const pages = [homePage, listingsPage, propertyDetailPage, contactPage, faqPage];
         
         pages.forEach(page => {
@@ -57,14 +62,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Show the target page, only if it's not null
         if (pageToShow) {
             pageToShow.classList.remove('hidden'); 
         } else {
             console.error(`Error: Target page to show is null. Check showPage call:`, pageToShow);
         }
 
-        // Clear any previous detail content when navigating away from detail page
         if (pageToShow !== propertyDetailPage) {
             if (detailContent) {
                 detailContent.innerHTML = '<p>Loading property details...</p>';
@@ -76,15 +79,15 @@ document.addEventListener('DOMContentLoaded', () => {
     homeLink.addEventListener('click', (e) => {
         e.preventDefault();
         showPage(homePage);
-        // When navigating to home, apply search and filters to refresh displayed properties
-        // This is important if you want the home page to always reflect latest search/filter status
-        applySearchAndFilters(); 
+        // On home page, only apply search, not the full filters
+        applySearchAndFilters(true); // Pass true to indicate homepage context
     });
 
     listingsLink.addEventListener('click', (e) => {
         e.preventDefault();
         showPage(listingsPage);
-        fetchAndRenderProperties(); // Refresh listings every time we go to the listings page
+        // On listings page, fetch and render, which will also apply all filters
+        fetchAndRenderProperties(); 
     });
 
     if (contactLink) {
@@ -106,17 +109,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Property Card Rendering Function ---
-    const renderProperties = (propertiesToRender) => {
-        // Ensure propertyListings is correctly referencing the element that holds the properties
-        // If your home page uses a different element to display properties, this needs adjustment.
-        if (!propertyListings) {
-            console.error("Error: 'property-listings' element not found in the DOM.");
+    // Now takes a targetContainer to decide where to render
+    const renderProperties = (propertiesToRender, targetContainer) => {
+        // Fallback to propertyListings if targetContainer isn't explicitly passed
+        const container = targetContainer || propertyListings; 
+
+        if (!container) {
+            console.error("Error: Target container for properties not found in the DOM.");
             return;
         }
 
-        propertyListings.innerHTML = '';
+        container.innerHTML = ''; // Clear existing properties
         if (propertiesToRender.length === 0) {
-            propertyListings.innerHTML = '<p class="no-properties-message">No properties found matching your criteria.</p>';
+            container.innerHTML = '<p class="no-properties-message">No properties found matching your criteria.</p>';
             return;
         }
 
@@ -139,27 +144,36 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-            propertyListings.appendChild(card);
+            container.appendChild(card); // Append to the correct container
         });
 
-        document.querySelectorAll('.view-details').forEach(button => {
-            button.addEventListener('click', (e) => viewPropertyDetails(e.target.dataset.id));
-        });
-        document.querySelectorAll('.edit-property').forEach(button => {
-            button.addEventListener('click', (e) => openPropertyModalForEdit(e.target.dataset.id));
-        });
-        document.querySelectorAll('.delete-property').forEach(button => {
-            button.addEventListener('click', (e) => deleteProperty(e.target.dataset.id));
-        });
+        // Add event listeners only if the buttons are present in the current view
+        if (container === propertyListings) { // Only add edit/delete on the listings page
+            document.querySelectorAll('.view-details').forEach(button => {
+                button.addEventListener('click', (e) => viewPropertyDetails(e.target.dataset.id));
+            });
+            document.querySelectorAll('.edit-property').forEach(button => {
+                button.addEventListener('click', (e) => openPropertyModalForEdit(e.target.dataset.id));
+            });
+            document.querySelectorAll('.delete-property').forEach(button => {
+                button.addEventListener('click', (e) => deleteProperty(e.target.dataset.id));
+            });
+        } else { // On home page, maybe only view details
+             document.querySelectorAll('.view-details').forEach(button => {
+                button.addEventListener('click', (e) => viewPropertyDetails(e.target.dataset.id));
+            });
+            // Don't add edit/delete buttons for home page properties if they're not there
+        }
     };
 
     // --- Fetch Properties from Backend ---
     const fetchAndRenderProperties = async () => {
-        // Ensure propertyListings exists before trying to manipulate its innerHTML
+        // Display loading message on BOTH potential containers if they exist
+        if (homePageListings) {
+            homePageListings.innerHTML = '<p style="text-align: center;">Loading properties...</p>';
+        }
         if (propertyListings) {
             propertyListings.innerHTML = '<p style="text-align: center;">Loading properties...</p>';
-        } else {
-            console.error("Error: 'property-listings' element not found, cannot display loading message.");
         }
         
         try {
@@ -168,25 +182,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
             }
             allProperties = await response.json();
-            console.log("Properties fetched successfully:", allProperties); // ADDED LOG
-            // Critically, after fetching, we should render properties, potentially applying current filters
-            applySearchAndFilters(); // Rerender properties with any existing search/filters
+            console.log("Properties fetched successfully:", allProperties); 
+            
+            // On initial load, or when navigating to listings, apply all filters
+            if (listingsPage && !listingsPage.classList.contains('hidden')) {
+                 applySearchAndFilters(false); // full filtering for listings page
+            } else if (homePage && !homePage.classList.contains('hidden')) {
+                 applySearchAndFilters(true); // simpler search for home page
+            } else {
+                // If neither is active, default to showing all on home page (e.g., initial load)
+                applySearchAndFilters(true); 
+            }
+
         } catch (error) {
             console.error("Error fetching properties:", error);
-            if (propertyListings) {
-                propertyListings.innerHTML = '<p style="color: red; text-align: center;">Failed to load properties. Make sure your backend server is running and accessible at ' + API_BASE_URL + '/api/properties</p>';
-            }
+            const errorMessage = '<p style="color: red; text-align: center;">Failed to load properties. Make sure your backend server is running and accessible at ' + API_BASE_URL + '/api/properties</p>';
+            if (homePageListings) homePageListings.innerHTML = errorMessage;
+            if (propertyListings) propertyListings.innerHTML = errorMessage;
         }
     };
 
     // --- Search & Filter Logic (Client-side) ---
-    const applySearchAndFilters = () => {
-        console.log("applySearchAndFilters is running!"); // ADDED LOG: CONFIRM FUNCTION CALL
+    // Added isHomePage parameter to differentiate behavior
+    const applySearchAndFilters = (isHomePage = false) => {
+        console.log("applySearchAndFilters is running! (isHomePage:", isHomePage, ")"); 
         let filtered = [...allProperties];
-        console.log("Initial properties for filtering:", filtered); // ADDED LOG: Check initial state
+        console.log("Initial properties for filtering:", filtered); 
 
         const searchTerm = searchInput.value.toLowerCase().trim();
-        console.log("Search Term from input:", searchTerm); // ADDED LOG: Check search input value
+        console.log("Search Term from input:", searchTerm); 
 
         if (searchTerm) {
             filtered = filtered.filter(p =>
@@ -195,43 +219,68 @@ document.addEventListener('DOMContentLoaded', () => {
                 (p.location && p.location.toLowerCase().includes(searchTerm))
             );
         }
-        console.log("Properties after search filter:", filtered.length, filtered); // ADDED LOG: Check after search
+        console.log("Properties after search filter:", filtered.length, filtered); 
 
-        const filterLocation = filterLocationInput.value.toLowerCase().trim();
-        console.log("Filter Location from input:", filterLocation); // ADDED LOG
-        if (filterLocation) {
-            filtered = filtered.filter(p => p.location && p.location.toLowerCase().includes(filterLocation));
+        // Apply advanced filters ONLY if it's NOT the home page
+        if (!isHomePage) {
+            const filterLocation = filterLocationInput.value.toLowerCase().trim();
+            console.log("Filter Location from input:", filterLocation); 
+            if (filterLocation) {
+                filtered = filtered.filter(p => p.location && p.location.toLowerCase().includes(filterLocation));
+            }
+            console.log("Properties after location filter:", filtered.length, filtered); 
+
+            const minPrice = parseFloat(filterMinPriceInput.value);
+            console.log("Min Price from input:", minPrice); 
+            if (!isNaN(minPrice)) {
+                filtered = filtered.filter(p => p.price >= minPrice);
+            }
+            console.log("Properties after min price filter:", filtered.length, filtered); 
+
+            const maxPrice = parseFloat(filterMaxPriceInput.value);
+            console.log("Max Price from input:", maxPrice); 
+            if (!isNaN(maxPrice)) {
+                filtered = filtered.filter(p => p.price <= maxPrice);
+            }
+            console.log("Properties after max price filter:", filtered.length, filtered); 
         }
-        console.log("Properties after location filter:", filtered.length, filtered); // ADDED LOG
 
-        const minPrice = parseFloat(filterMinPriceInput.value);
-        console.log("Min Price from input:", minPrice); // ADDED LOG
-        if (!isNaN(minPrice)) {
-            filtered = filtered.filter(p => p.price >= minPrice);
+        console.log("Final filtered properties to render:", filtered.length, filtered); 
+
+        // Render to the correct container based on which page is active
+        if (homePage && !homePage.classList.contains('hidden')) {
+            renderProperties(filtered, homePageListings);
+        } else if (listingsPage && !listingsPage.classList.contains('hidden')) {
+            renderProperties(filtered, propertyListings);
         }
-        console.log("Properties after min price filter:", filtered.length, filtered); // ADDED LOG
-
-        const maxPrice = parseFloat(filterMaxPriceInput.value);
-        console.log("Max Price from input:", maxPrice); // ADDED LOG
-        if (!isNaN(maxPrice)) {
-            filtered = filtered.filter(p => p.price <= maxPrice);
-        }
-        console.log("Final filtered properties to render:", filtered.length, filtered); // ADDED LOG
-
-        renderProperties(filtered);
     };
 
     // Event listeners for the search/filter inputs and buttons
-    if (searchInput) searchInput.addEventListener('input', applySearchAndFilters);
-    if (searchButton) searchButton.addEventListener('click', applySearchAndFilters);
-    if (applyFiltersButton) applyFiltersButton.addEventListener('click', applySearchAndFilters);
+    if (searchInput) searchInput.addEventListener('input', () => {
+        if (homePage && !homePage.classList.contains('hidden')) {
+            applySearchAndFilters(true); // Home page search
+        } else if (listingsPage && !listingsPage.classList.contains('hidden')) {
+            applySearchAndFilters(false); // Listings page search (with filters)
+        }
+    });
+
+    if (searchButton) searchButton.addEventListener('click', () => {
+        if (homePage && !homePage.classList.contains('hidden')) {
+            applySearchAndFilters(true); // Home page search
+        } else if (listingsPage && !listingsPage.classList.contains('hidden')) {
+            applySearchAndFilters(false); // Listings page search (with filters)
+        }
+    });
+
+    // These listeners are only for the listings page, so we only need to call applySearchAndFilters without the 'isHomePage' flag
+    if (applyFiltersButton) applyFiltersButton.addEventListener('click', () => applySearchAndFilters(false)); // Always full filters
     if (clearFiltersButton) {
         clearFiltersButton.addEventListener('click', () => {
             if (searchInput) searchInput.value = '';
             if (filterLocationInput) filterLocationInput.value = '';
             if (filterMinPriceInput) filterMinPriceInput.value = '';
             if (filterMaxPriceInput) filterMaxPriceInput.value = '';
-            applySearchAndFilters(); // Re-apply to show all properties (clears filters)
+            applySearchAndFilters(false); // Clear all filters and re-apply for listings page
         });
     }
 
