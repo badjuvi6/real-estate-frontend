@@ -472,7 +472,62 @@ footer {
     padding: 20px 0;
     margin-top: auto; /* Pushes footer to the bottom */
     box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+    /* ORIGINAL flex settings for footer are removed as .contact-info now handles its children */
 }
+
+/* Styles for contact info section within footer */
+/* MODIFIED: This now applies to paragraphs directly inside .contact-info, like "Reach Out To Us:" */
+.contact-info p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+.contact-info a {
+    color: #74b9ff; /* Consistent link color with header nav hover */
+    text-decoration: none;
+}
+
+.contact-info a:hover {
+    text-decoration: underline;
+}
+
+/* NEW: Styles for the overall horizontal row containing phone, email, and social links */
+.footer-contact-and-social {
+    display: flex; /* Make it a flex container */
+    flex-wrap: wrap; /* Allow items to wrap to the next line on smaller screens */
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Vertically align items in the row */
+    gap: 25px; /* Space between the phone, email, and social links */
+    margin-top: 10px; /* Space between "Reach Out To Us:" and this row */
+    margin-bottom: 10px; /* Space before social links if they wrap */
+}
+
+/* MODIFIED: Styles for paragraphs (phone/email) directly within the new horizontal container */
+.footer-contact-and-social p {
+    margin: 0; /* Remove default paragraph margins */
+    display: flex; /* Make icon and text align */
+    align-items: center;
+    gap: 8px; /* Space between icon and text */
+}
+
+/* MODIFIED: Styles for the social links container, now inside .footer-contact-and-social */
+.social-links {
+    display: flex; /* Make social links themselves a flex container for their icons */
+    gap: 15px; /* Space between social icons */
+    margin: 0; /* Remove previous margin-top */
+}
+
+.social-links a {
+    color: #f8f9fa; /* Consistent color with header nav */
+    font-size: 1.5em;
+    /* Removed margin: 0 10px; as gap handles spacing now */
+    transition: color 0.3s ease;
+}
+
+.social-links a:hover {
+    color: #74b9ff; /* Consistent hover color with header nav hover */
+}
+
 
 /* Media Queries for Responsiveness */
 @media (max-width: 768px) {
@@ -508,5 +563,13 @@ footer {
     .modal-buttons {
         flex-direction: column;
         gap: 10px;
+    }
+    /* MODIFIED: Adjustments for horizontal contact details on smaller screens */
+    .footer-contact-and-social {
+        flex-direction: column; /* Stack vertically on small screens */
+        gap: 10px; /* Reduce gap when stacked */
+    }
+    .social-links {
+        margin-top: 10px; /* Add some margin when stacked vertically */
     }
 }
