@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelModalBtn = document.getElementById('cancel-modal');
     const propertyIdInput = document.getElementById('property-id');
     const titleInput = document.getElementById('title');
-    const descriptionInput = document.getElementById('description');
+    const descriptionInput = document = document.getElementById('description');
     const priceInput = document.getElementById('price');
     const locationInput = document.getElementById('location');
     const imageFileInput = document.getElementById('imageFile');
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pageToShow) {
             pageToShow.classList.remove('hidden'); 
         } else {
-             console.error(`Error: Target page to show is null. Check showPage call:`, pageToShow);
+            console.error(`Error: Target page to show is null. Check showPage call:`, pageToShow);
         }
 
         // Clear any previous detail content when navigating away from detail page
@@ -76,6 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
     homeLink.addEventListener('click', (e) => {
         e.preventDefault();
         showPage(homePage);
+        // When navigating to home, apply search and filters to refresh displayed properties
+        // This is important if you want the home page to always reflect latest search/filter status
+        applySearchAndFilters(); 
     });
 
     listingsLink.addEventListener('click', (e) => {
@@ -104,6 +107,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Property Card Rendering Function ---
     const renderProperties = (propertiesToRender) => {
+        // Ensure propertyListings is correctly referencing the element that holds the properties
+        // If your home page uses a different element to display properties, this needs adjustment.
+        if (!propertyListings) {
+            console.error("Error: 'property-listings' element not found in the DOM.");
+            return;
+        }
+
         propertyListings.innerHTML = '';
         if (propertiesToRender.length === 0) {
             propertyListings.innerHTML = '<p class="no-properties-message">No properties found matching your criteria.</p>';
@@ -145,64 +155,92 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fetch Properties from Backend ---
     const fetchAndRenderProperties = async () => {
-        propertyListings.innerHTML = '<p style="text-align: center;">Loading properties...</p>';
+        // Ensure propertyListings exists before trying to manipulate its innerHTML
+        if (propertyListings) {
+            propertyListings.innerHTML = '<p style="text-align: center;">Loading properties...</p>';
+        } else {
+            console.error("Error: 'property-listings' element not found, cannot display loading message.");
+        }
+        
         try {
             const response = await fetch(`${API_BASE_URL}/api/properties`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
             }
             allProperties = await response.json();
-            renderProperties(allProperties);
+            console.log("Properties fetched successfully:", allProperties); // ADDED LOG
+            // Critically, after fetching, we should render properties, potentially applying current filters
+            applySearchAndFilters(); // Rerender properties with any existing search/filters
         } catch (error) {
             console.error("Error fetching properties:", error);
-            propertyListings.innerHTML = '<p style="color: red; text-align: center;">Failed to load properties. Make sure your backend server is running and accessible at ' + API_BASE_URL + '/api/properties</p>';
+            if (propertyListings) {
+                propertyListings.innerHTML = '<p style="color: red; text-align: center;">Failed to load properties. Make sure your backend server is running and accessible at ' + API_BASE_URL + '/api/properties</p>';
+            }
         }
     };
 
     // --- Search & Filter Logic (Client-side) ---
     const applySearchAndFilters = () => {
+        console.log("applySearchAndFilters is running!"); // ADDED LOG: CONFIRM FUNCTION CALL
         let filtered = [...allProperties];
+        console.log("Initial properties for filtering:", filtered); // ADDED LOG: Check initial state
 
         const searchTerm = searchInput.value.toLowerCase().trim();
+        console.log("Search Term from input:", searchTerm); // ADDED LOG: Check search input value
+
         if (searchTerm) {
             filtered = filtered.filter(p =>
-                p.title.toLowerCase().includes(searchTerm) ||
-                p.description.toLowerCase().includes(searchTerm) ||
-                p.location.toLowerCase().includes(searchTerm)
+                (p.title && p.title.toLowerCase().includes(searchTerm)) ||
+                (p.description && p.description.toLowerCase().includes(searchTerm)) ||
+                (p.location && p.location.toLowerCase().includes(searchTerm))
             );
         }
+        console.log("Properties after search filter:", filtered.length, filtered); // ADDED LOG: Check after search
 
         const filterLocation = filterLocationInput.value.toLowerCase().trim();
+        console.log("Filter Location from input:", filterLocation); // ADDED LOG
         if (filterLocation) {
-            filtered = filtered.filter(p => p.location.toLowerCase().includes(filterLocation));
+            filtered = filtered.filter(p => p.location && p.location.toLowerCase().includes(filterLocation));
         }
+        console.log("Properties after location filter:", filtered.length, filtered); // ADDED LOG
 
         const minPrice = parseFloat(filterMinPriceInput.value);
+        console.log("Min Price from input:", minPrice); // ADDED LOG
         if (!isNaN(minPrice)) {
             filtered = filtered.filter(p => p.price >= minPrice);
         }
+        console.log("Properties after min price filter:", filtered.length, filtered); // ADDED LOG
 
         const maxPrice = parseFloat(filterMaxPriceInput.value);
+        console.log("Max Price from input:", maxPrice); // ADDED LOG
         if (!isNaN(maxPrice)) {
             filtered = filtered.filter(p => p.price <= maxPrice);
         }
+        console.log("Final filtered properties to render:", filtered.length, filtered); // ADDED LOG
 
         renderProperties(filtered);
     };
 
-    searchInput.addEventListener('input', applySearchAndFilters);
-    searchButton.addEventListener('click', applySearchAndFilters);
-    applyFiltersButton.addEventListener('click', applySearchAndFilters);
-    clearFiltersButton.addEventListener('click', () => {
-        searchInput.value = '';
-        filterLocationInput.value = '';
-        filterMinPriceInput.value = '';
-        filterMaxPriceInput.value = '';
-        applySearchAndFilters();
-    });
+    // Event listeners for the search/filter inputs and buttons
+    if (searchInput) searchInput.addEventListener('input', applySearchAndFilters);
+    if (searchButton) searchButton.addEventListener('click', applySearchAndFilters);
+    if (applyFiltersButton) applyFiltersButton.addEventListener('click', applySearchAndFilters);
+    if (clearFiltersButton) {
+        clearFiltersButton.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            if (filterLocationInput) filterLocationInput.value = '';
+            if (filterMinPriceInput) filterMinPriceInput.value = '';
+            if (filterMaxPriceInput) filterMaxPriceInput.value = '';
+            applySearchAndFilters(); // Re-apply to show all properties (clears filters)
+        });
+    }
 
     // --- Property Detail View ---
     const viewPropertyDetails = async (id) => {
+        if (!detailContent) {
+            console.error("Error: 'detail-content' element not found.");
+            return;
+        }
         detailContent.innerHTML = '<p style="text-align: center;">Loading property details...</p>';
         showPage(propertyDetailPage);
 
@@ -248,17 +286,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Error fetching property details:", error);
-            detailContent.innerHTML = '<p style="color: red; text-align: center;">Failed to load property details. Property may not exist or backend is down.</p>';
+            if (detailContent) {
+                detailContent.innerHTML = '<p style="color: red; text-align: center;">Failed to load property details. Property may not exist or backend is down.</p>';
+            }
         }
     };
 
     // --- Modals and Forms for Add/Edit ---
     const openPropertyModalForAdd = () => {
-        propertyIdInput.value = '';
-        propertyForm.reset();
-        imagePreview.src = '';
-        imagePreview.classList.add('hidden');
-        propertyModal.classList.remove('hidden');
+        if (propertyIdInput) propertyIdInput.value = '';
+        if (propertyForm) propertyForm.reset();
+        if (imagePreview) {
+            imagePreview.src = '';
+            imagePreview.classList.add('hidden');
+        }
+        if (propertyModal) propertyModal.classList.remove('hidden');
     };
 
     const openPropertyModalForEdit = async (id) => {
@@ -268,22 +310,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const property = await response.json();
-            propertyIdInput.value = property._id;
-            titleInput.value = property.title;
-            descriptionInput.value = property.description;
-            priceInput.value = property.price;
-            locationInput.value = property.location;
+            if (propertyIdInput) propertyIdInput.value = property._id;
+            if (titleInput) titleInput.value = property.title;
+            if (descriptionInput) descriptionInput.value = property.description;
+            if (priceInput) priceInput.value = property.price;
+            if (locationInput) locationInput.value = property.location;
             
-            if (property.imageUrl && property.imageUrl.startsWith('http')) {
-                imagePreview.src = property.imageUrl;
-                imagePreview.classList.remove('hidden');
-            } else {
-                imagePreview.src = '';
-                imagePreview.classList.add('hidden');
+            if (imagePreview) {
+                if (property.imageUrl && property.imageUrl.startsWith('http')) {
+                    imagePreview.src = property.imageUrl;
+                    imagePreview.classList.remove('hidden');
+                } else {
+                    imagePreview.src = '';
+                    imagePreview.classList.add('hidden');
+                }
             }
-            imageFileInput.value = '';
+            if (imageFileInput) imageFileInput.value = '';
 
-            propertyModal.classList.remove('hidden');
+            if (propertyModal) propertyModal.classList.remove('hidden');
         } catch (error) {
             console.error("Error fetching property for edit:", error);
             alert("Could not load property for editing.");
@@ -291,75 +335,85 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const closePropertyModal = () => {
-        propertyModal.classList.add('hidden');
-        imagePreview.src = '';
-        imagePreview.classList.add('hidden');
-        propertyForm.reset();
-    };
-
-    addPropertyBtn.addEventListener('click', openPropertyModalForAdd);
-    cancelModalBtn.addEventListener('click', closePropertyModal);
-
-    // --- Image File Preview Listener ---
-    imageFileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                imagePreview.src = e.target.result;
-                imagePreview.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        } else {
+        if (propertyModal) propertyModal.classList.add('hidden');
+        if (imagePreview) {
             imagePreview.src = '';
             imagePreview.classList.add('hidden');
         }
-    });
+        if (propertyForm) propertyForm.reset();
+    };
+
+    if (addPropertyBtn) addPropertyBtn.addEventListener('click', openPropertyModalForAdd);
+    if (cancelModalBtn) cancelModalBtn.addEventListener('click', closePropertyModal);
+
+    // --- Image File Preview Listener ---
+    if (imageFileInput) {
+        imageFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (imagePreview) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.classList.remove('hidden');
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                if (imagePreview) {
+                    imagePreview.src = '';
+                    imagePreview.classList.add('hidden');
+                }
+            }
+        });
+    }
 
     // --- Property Form Submission (Handles both Add and Edit with file upload) ---
-    propertyForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    if (propertyForm) {
+        propertyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        const formData = new FormData();
-        formData.append('title', titleInput.value.trim());
-        formData.append('description', descriptionInput.value.trim());
-        formData.append('price', parseFloat(priceInput.value));
-        formData.append('location', locationInput.value.trim());
-        
-        if (imageFileInput.files[0]) {
-            formData.append('image', imageFileInput.files[0]);
-        }
-
-        const propertyId = propertyIdInput.value;
-
-        try {
-            let response;
-            let method = 'POST';
-            let url = `${API_BASE_URL}/api/properties`;
-
-            if (propertyId) {
-                method = 'PUT';
-                url = `${API_BASE_URL}/api/properties/${propertyId}`;
+            const formData = new FormData();
+            formData.append('title', titleInput.value.trim());
+            formData.append('description', descriptionInput.value.trim());
+            formData.append('price', parseFloat(priceInput.value));
+            formData.append('location', locationInput.value.trim());
+            
+            if (imageFileInput && imageFileInput.files[0]) {
+                formData.append('image', imageFileInput.files[0]);
             }
 
-            response = await fetch(url, {
-                method: method,
-                body: formData,
-            });
+            const propertyId = propertyIdInput.value;
 
-            if (!response.ok) {
-                const errorBody = await response.json();
-                throw new Error(`HTTP error! Status: ${response.status}. Message: ${errorBody.message || 'Unknown error.'}`);
+            try {
+                let response;
+                let method = 'POST';
+                let url = `${API_BASE_URL}/api/properties`;
+
+                if (propertyId) {
+                    method = 'PUT';
+                    url = `${API_BASE_URL}/api/properties/${propertyId}`;
+                }
+
+                response = await fetch(url, {
+                    method: method,
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(`HTTP error! Status: ${response.status}. Message: ${errorBody.message || 'Unknown error.'}`);
+                }
+
+                closePropertyModal();
+                fetchAndRenderProperties();
+                alert(`Property ${propertyId ? 'updated' : 'added'} successfully!`);
+            } catch (error) {
+                console.error("Error saving property:", error);
+                alert(`Failed to save property: ${error.message}`);
             }
-
-            closePropertyModal();
-            fetchAndRenderProperties();
-            alert(`Property ${propertyId ? 'updated' : 'added'} successfully!`);
-        } catch (error) {
-            console.error("Error saving property:", error);
-            alert(`Failed to save property: ${error.message}`);
-        }
-    });
+        });
+    }
 
     // --- Delete Property ---
     const deleteProperty = async (id) => {
@@ -388,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (contactForm) {
         contactForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            contactStatus.textContent = 'Sending message...';
+            if (contactStatus) contactStatus.textContent = 'Sending message...';
             try {
                 const response = await fetch(`${API_BASE_URL}/api/contact`, { // Assuming you have a /api/contact endpoint
                     method: 'POST',
@@ -408,18 +462,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const result = await response.json();
-                contactStatus.textContent = 'Message sent successfully! We will get back to you soon.';
-                contactStatus.style.color = 'green';
+                if (contactStatus) {
+                    contactStatus.textContent = 'Message sent successfully! We will get back to you soon.';
+                    contactStatus.style.color = 'green';
+                }
                 contactForm.reset();
             } catch (error) {
                 console.error('Error sending message:', error);
-                contactStatus.textContent = 'Failed to send message. Please try again later.';
-                contactStatus.style.color = 'red';
+                if (contactStatus) {
+                    contactStatus.textContent = 'Failed to send message. Please try again later.';
+                    contactStatus.style.color = 'red';
+                }
             }
         });
     }
 
     // --- Initial Load ---
-    fetchAndRenderProperties();
-    showPage(homePage);
+    fetchAndRenderProperties(); // This fetches ALL properties and stores them in `allProperties`
+    showPage(homePage); // This ensures the home page is displayed first
 });
