@@ -4,13 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const homePage = document.getElementById('home-page');
     const listingsPage = document.getElementById('listings-page');
     const propertyDetailPage = document.getElementById('property-detail-page');
-    const detailContent = document.getElementById('detail-content'); // Crucial: Get the specific div inside property-detail-page
+    const detailContent = document.getElementById('detail-content');
     const contactPage = document.getElementById('contact-page');
     const faqPage = document.getElementById('faq-page');
+
     const homeLink = document.getElementById('home-link');
     const listingsLink = document.getElementById('listings-link');
     const contactLink = document.getElementById('contact-link');
     const faqLink = document.getElementById('faq-link');
+
     const propertyListings = document.getElementById('property-listings');
     const addPropertyBtn = document.getElementById('add-property-btn');
     const propertyModal = document.getElementById('property-modal');
@@ -36,8 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactStatus = document.getElementById('contact-status');
 
     // --- API Base URL ---
-    // IMPORTANT: Make sure this is your Render backend's base URL.
-    const API_BASE_URL = 'https://real-estate-backend-h76n.onrender.com';
+    const API_BASE_URL = 'https://real-estate-backend-h76n.onrender.com'; // Your Render backend URL
 
     let allProperties = []; // To store all fetched properties for client-side filtering
 
@@ -46,9 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // All known page sections
         const pages = [homePage, listingsPage, propertyDetailPage, contactPage, faqPage];
         
-        // Ensure all page references are valid before trying to use classList
-        // If any of these are null, it means the corresponding HTML element is missing.
-        // This log helps debug if the issue persists.
         pages.forEach(page => {
             if (page) {
                 page.classList.add('hidden'); // Hide all pages
@@ -68,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Clear any previous detail content when navigating away from detail page
         if (pageToShow !== propertyDetailPage) {
-            // Ensure detailContent is not null before trying to set innerHTML
             if (detailContent) {
                 detailContent.innerHTML = '<p>Loading property details...</p>';
             }
@@ -150,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchAndRenderProperties = async () => {
         propertyListings.innerHTML = '<p style="text-align: center;">Loading properties...</p>';
         try {
-            const response = await fetch(`${API_BASE_URL}/api/properties`); // Corrected path
+            const response = await fetch(`${API_BASE_URL}/api/properties`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
             }
@@ -206,12 +203,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Property Detail View ---
     const viewPropertyDetails = async (id) => {
-        // Clear content before loading new details
         detailContent.innerHTML = '<p style="text-align: center;">Loading property details...</p>';
-        showPage(propertyDetailPage); // Show the detail page container immediately
+        showPage(propertyDetailPage);
 
         try {
-            // Corrected: Ensure API path includes /api/properties
             const response = await fetch(`${API_BASE_URL}/api/properties/${id}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -232,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // Add event listener for the "Back to Listings" button on the detail page
             const detailBackButton = document.getElementById('detail-back-button');
             if (detailBackButton) {
                 detailBackButton.addEventListener('click', () => {
@@ -241,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Add event listener for the contact button
             const contactAgentBtn = document.getElementById('contact-agent-btn');
             if (contactAgentBtn) {
                 contactAgentBtn.addEventListener('click', () => {
@@ -270,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const openPropertyModalForEdit = async (id) => {
         try {
-            // Corrected: Ensure API path includes /api/properties
             const response = await fetch(`${API_BASE_URL}/api/properties/${id}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -343,12 +335,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let response;
             let method = 'POST';
-            // Corrected: URL for POST (add) should be /api/properties
             let url = `${API_BASE_URL}/api/properties`;
 
             if (propertyId) {
                 method = 'PUT';
-                // Corrected: URL for PUT (edit) should be /api/properties/:id
                 url = `${API_BASE_URL}/api/properties/${propertyId}`;
             }
 
@@ -377,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         try {
-            // Corrected: URL for DELETE should be /api/properties/:id
             const response = await fetch(`${API_BASE_URL}/api/properties/${id}`, {
                 method: 'DELETE',
             });
@@ -394,6 +383,41 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`Failed to delete property: ${error.message}`);
         }
     };
+
+    // --- Contact Form Submission ---
+    if (contactForm) {
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            contactStatus.textContent = 'Sending message...';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/contact`, { // Assuming you have a /api/contact endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById('contact-name').value,
+                        email: document.getElementById('contact-email').value,
+                        subject: document.getElementById('contact-subject').value,
+                        message: document.getElementById('contact-message').value,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                contactStatus.textContent = 'Message sent successfully! We will get back to you soon.';
+                contactStatus.style.color = 'green';
+                contactForm.reset();
+            } catch (error) {
+                console.error('Error sending message:', error);
+                contactStatus.textContent = 'Failed to send message. Please try again later.';
+                contactStatus.style.color = 'red';
+            }
+        });
+    }
 
     // --- Initial Load ---
     fetchAndRenderProperties();
